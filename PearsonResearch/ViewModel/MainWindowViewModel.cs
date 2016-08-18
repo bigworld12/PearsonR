@@ -1,4 +1,5 @@
 ﻿using PearsonResearch.DataManagment;
+using PearsonResearch.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,7 +26,7 @@ namespace PearsonResearch.ViewModel
 
             DataEnteries.CollectionChanged += DataEnteries_CollectionChanged;
             DataEnteries.ItemPropertyChanged += DataEnteries_ItemPropertyChanged;
-            
+
             InitiateColumns();
         }
 
@@ -101,9 +102,8 @@ namespace PearsonResearch.ViewModel
                     {
                         item.Right_Parameter.PropertyChanged += Right_Parameter_PropertyChanged;
                         item.Left_Parameter.PropertyChanged += Left_Parameter_PropertyChanged;
-                        //when adding/removing items from DataEntries list
-                        item.Left_Parameter.MathematicalRepresentation = LeftExpression;
-                        item.Right_Parameter.MathematicalRepresentation = RightExpression;
+                                               
+                        item.ViewModel = this;
 
                         item.RequestParameters += Item_RequestParameters;
                         item.UpdateFromAllParameters();
@@ -129,7 +129,7 @@ namespace PearsonResearch.ViewModel
                 RaisePropertyChanged(nameof(LeftSquaredSum));
 
                 RaisePropertyChanged(nameof(PearsonR));
-            }         
+            }
         }
 
         private void Right_Parameter_PropertyChanged(object sender , PropertyChangedEventArgs e)
@@ -179,67 +179,69 @@ namespace PearsonResearch.ViewModel
             {
                 if (columnsinstance == null)
                 {
-                    columnsinstance = new ObservableCollection<DataGridColumn>();
+                    InitiateColumns();
                 }
-
-                /*
-                 Column headers are bound to the names of ALLParameters
-                 */
-                //2 or more (has the left and right)
-                if (columnsinstance.Count == AllParametersList.Count + 2)
-                {
-                    return columnsinstance;
-                }
-                else
-                {
-                    //add new columns based on header name ?
-                    for (int i = 0; i < AllParametersList.Count; i++)
-                    {
-                        Parameter item = AllParametersList[i];
-                        if (!CheckColumnByHeader(item.Name))
-                        {
-                            //in the DataEntry object
-                            //use set binding for the data context
-                            var newcol = new DataGridTextColumn();
-                            //header will get from source item
-                            //header will get from path Name of source item
-
-                            var headerbinding = new Binding();
-                            headerbinding.Source = item;
-                            headerbinding.Path = new System.Windows.PropertyPath("Name");
-                            headerbinding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-                            headerbinding.Mode = BindingMode.OneWay;
-
-                            BindingOperations.SetBinding(newcol , DataGridColumn.HeaderProperty , headerbinding);
-
-                            var bind = new Binding();
-                            //Parameters property of the DataEntry object
-                            bind.Path = new System.Windows.PropertyPath($"Parameters[{i}].Value");
-                            bind.Mode = BindingMode.TwoWay;
-                            bind.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-
-                            newcol.Binding = bind;
-
-                            columnsinstance.Insert(i , newcol);
-                        }
-                    }
-                }
-
-
-
-
-
                 return columnsinstance;
             }
+        }
+        public DataGridTextColumn NewColumnFromParameter(Parameter p , int Parameterindex)
+        {
+            //in the DataEntry object
+            //use set binding for the data context
+            var newcol = new DataGridTextColumn();
+            //header will get from source item
+            //header will get from path Name of source item
 
+            var headerbinding = new Binding();
+            headerbinding.Source = p;
+            headerbinding.Path = new System.Windows.PropertyPath("Name");
+            headerbinding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+            headerbinding.Mode = BindingMode.OneWay;
 
+            BindingOperations.SetBinding(newcol , DataGridColumn.HeaderProperty , headerbinding);
+
+            var bind = new Binding();
+            //Parameters property of the DataEntry object
+            bind.Path = new System.Windows.PropertyPath($"Parameters[{Parameterindex}].Value");
+            bind.Mode = BindingMode.TwoWay;
+            bind.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+
+            newcol.Binding = bind;
+
+            return newcol;
         }
 
         public bool CheckColumnByHeader(string Header)
         {
             return columnsinstance.Any(x => x.GetValue(DataGridColumn.HeaderProperty).ToString() == Header);
         }
+        public bool CheckColumnByParameter(Parameter HeaderParam)
+        {
+            return GetColumnByParameter(HeaderParam) != null;
+        }
+        public DataGridColumn GetColumnByParameter(Parameter p)
+        {
+            return columnsinstance.Find(x =>
+            {
+                var binding = BindingOperations.GetBinding(x , DataGridColumn.HeaderProperty);
+                if (binding == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    if (binding.Source == p)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
 
+                });
+        }
 
         private void AllParametersList_CollectionChanged(object sender , System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {/*
@@ -247,27 +249,50 @@ namespace PearsonResearch.ViewModel
             1 - Update columns
             2 - Add/Remove it to all DataEntery Objects (using UpdateFromAllParameters)            
              */
-            if (e.NewItems != null)
-            {
-                foreach (var item in e.NewItems)
-                {
-                    var param = item as Parameter;
-                    foreach (var toupdate in DataEnteries)
-                    {
 
-                        toupdate.UpdateFromAllParameters();
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+            {
+                if (e.NewItems != null)
+                {
+                    var castednewitems = e.NewItems.Cast<Parameter>().ToList();
+                    for (int i = 0; i < castednewitems.Count; i++)
+                    {
+                        var param = castednewitems[i];
+                        foreach (var toupdate in DataEnteries)
+                        {
+                            toupdate.UpdateFromAllParameters();
+                        }
+
+                        //add new parameters to column instance                        
+                        if (!CheckColumnByParameter(param))
+                        {
+                            //add it 
+                            var newcol = NewColumnFromParameter(param , i + e.NewStartingIndex);
+                            columnsinstance.Insert(i + e.NewStartingIndex , newcol);
+                        }
                     }
                 }
             }
-
-            if (e.OldItems != null)
+            else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
             {
-                foreach (var item in e.OldItems)
+                if (e.OldItems != null)
                 {
-                    var param = item as Parameter;
-                    foreach (var toupdate in DataEnteries)
+
+                    var castedolditems = e.OldItems.Cast<Parameter>().ToList();
+                    for (int i = 0; i < castedolditems.Count; i++)
                     {
-                        toupdate.UpdateFromAllParameters();
+                        var param = castedolditems[i];
+                        foreach (var toupdate in DataEnteries)
+                        {
+                            toupdate.UpdateFromAllParameters();
+                        }
+
+                        var equicol = GetColumnByParameter(param);
+                        //remove old parameters from column instance
+                        if (equicol != null)
+                        {
+                            columnsinstance.Remove(equicol);
+                        }
                     }
                 }
             }
@@ -310,7 +335,7 @@ namespace PearsonResearch.ViewModel
                 {
                     finalsum += item.Left_Parameter.Value;
                 }
-                return finalsum;                
+                return finalsum;
             }
         }
         public decimal RightSum
@@ -344,7 +369,7 @@ namespace PearsonResearch.ViewModel
                 double finalsum = 0;
                 foreach (var item in DataEnteries)
                 {
-                    finalsum += Pow(item.Left_Parameter.Value,2);
+                    finalsum += Pow(item.Left_Parameter.Value , 2);
                 }
                 return finalsum;
             }
@@ -373,10 +398,10 @@ namespace PearsonResearch.ViewModel
                   */
                 int c = DataEnteries.Count;
                 double TOP = 1;
-                double.TryParse(((c * LeftRightSum) - (LeftSum * RightSum)).ToString(),out TOP);
+                double.TryParse(((c * LeftRightSum) - (LeftSum * RightSum)).ToString() , out TOP);
 
-                double BOTTOM = 
-                    Math.Sqrt((c*LeftSquaredSum)-(Pow(LeftSum,2))) 
+                double BOTTOM =
+                    Math.Sqrt((c * LeftSquaredSum) - (Pow(LeftSum , 2)))
                     *
                     Math.Sqrt((c * RightSquaredSum) - (Pow(RightSum , 2)));
 
@@ -389,7 +414,7 @@ namespace PearsonResearch.ViewModel
 
 
 
-        public double Pow(decimal first,decimal second)
+        public double Pow(decimal first , decimal second)
         {
             double dfirst = 1d;
             double dsec = 1d;
@@ -410,6 +435,7 @@ namespace PearsonResearch.ViewModel
             {
                 m_LeftExpression = value;
                 RaisePropertyChanged(nameof(LeftExpression));
+               
             }
         }
 
@@ -423,6 +449,7 @@ namespace PearsonResearch.ViewModel
             {
                 m_RightExpression = value;
                 RaisePropertyChanged(nameof(RightExpression));
+              
             }
         }
 

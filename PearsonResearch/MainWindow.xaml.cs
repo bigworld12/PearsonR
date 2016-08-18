@@ -32,7 +32,7 @@ namespace PearsonResearch
 
             //binding doesn't work ? it works :P
             //todo : validate against spaces in parameter name
-            ViewModel.AllParametersList.Add(new DataManagment.Parameter() { Name = "x"});
+            ViewModel.AllParametersList.Add(new DataManagment.Parameter() { Name = "x" });
             ViewModel.AllParametersList.Add(new DataManagment.Parameter() { Name = "y" });
             ViewModel.LeftExpression = "[x]";
             ViewModel.RightExpression = "[y]";
@@ -53,15 +53,15 @@ namespace PearsonResearch
         private void UpdateExpressionsButton_Click(object sender , RoutedEventArgs e)
         {
             foreach (var item in ViewModel.DataEnteries)
-            {                
-                item.Left_Parameter.MathematicalRepresentation = ViewModel.LeftExpression;
-            }
-            foreach (var item in ViewModel.DataEnteries)
             {
-                item.Right_Parameter.MathematicalRepresentation = ViewModel.RightExpression;
+                item.Left_Parameter.RaisePropertyChanged(nameof(item.Left_Parameter.MathematicalRepresentation));
+                item.Left_Parameter.RaisePropertyChanged(nameof(item.Left_Parameter.Value));
+
+                item.Right_Parameter.RaisePropertyChanged(nameof(item.Right_Parameter.MathematicalRepresentation));
+                item.Right_Parameter.RaisePropertyChanged(nameof(item.Right_Parameter.Value));
             }
         }
-        
+
         /*
          Pearson's formula : 
          c = data count

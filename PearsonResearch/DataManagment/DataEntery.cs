@@ -39,6 +39,18 @@ namespace PearsonResearch.DataManagment
         }
 
 
+        private ViewModel.MainWindowViewModel m_ViewModel;
+
+        public ViewModel.MainWindowViewModel ViewModel
+        {
+            get { return m_ViewModel; }
+            set
+            {
+                m_ViewModel = value;
+                RaisePropertyChanged(nameof(ViewModel));
+            }
+        }
+
 
 
 
@@ -62,11 +74,20 @@ namespace PearsonResearch.DataManagment
         {
             var curparams = RequestAllParams();
             if (curparams == null) return;
+            //add items that exist in curparams and not Parameters
+            //remove items that exist in Parameters and not in curparams
             foreach (var item in curparams)
             {
                 if (!Parameters.Any(x => x.BaseParameter == item))
                 {
                     Parameters.Add(new ValuedParameter(item));
+                }
+            }
+            foreach (var item in Parameters.ToList())
+            {
+                if (!curparams.Any(x => item.BaseParameter == x))
+                {
+                    Parameters.Remove(item);
                 }
             }
         }

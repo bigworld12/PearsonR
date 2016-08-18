@@ -15,7 +15,7 @@ namespace PearsonResearch.DataManagment
     /// </summary>
     public class PParameter : INotifyPropertyChanged
     {
-     
+
         public PParameter(DataEntery toassign)
         {
             AssignedObject = toassign;
@@ -25,27 +25,34 @@ namespace PearsonResearch.DataManagment
         public DataEntery AssignedObject
         {
             get { return m_AssignedObject; }
-            set { m_AssignedObject = value;
+            set
+            {
+                m_AssignedObject = value;
                 RaisePropertyChanged(nameof(AssignedObject));
-                RaisePropertyChanged(nameof(MathematicalRepresentation));                
+                RaisePropertyChanged(nameof(MathematicalRepresentation));
                 RaisePropertyChanged(nameof(Value));
             }
         }
 
-        
 
-        private string m_MathematicalRepresentation;
+              
+
         /// <summary>
         /// the string that will be evaluated using ncalc library
         /// </summary>
         public string MathematicalRepresentation
         {
-            get { return m_MathematicalRepresentation; }
-            set
+            get
             {
-                m_MathematicalRepresentation = value;
-                RaisePropertyChanged(nameof(MathematicalRepresentation));                
-                RaisePropertyChanged(nameof(Value));
+                if (AssignedObject.Left_Parameter == this)
+                {
+                    return AssignedObject.ViewModel.LeftExpression;
+                }
+                else
+                {
+                    //right parameter
+                    return AssignedObject.ViewModel.RightExpression;
+                }
             }
         }
 
@@ -56,28 +63,30 @@ namespace PearsonResearch.DataManagment
                 try
                 {
                     if (AssignedObject == null || string.IsNullOrWhiteSpace(MathematicalRepresentation) || AssignedObject.Parameters.Count == 0) return 0m;
-                  
-                    Expression exp = new Expression(MathematicalRepresentation, EvaluateOptions.IgnoreCase | EvaluateOptions.NoCache);
+
+                    Expression exp = new Expression(MathematicalRepresentation , EvaluateOptions.IgnoreCase | EvaluateOptions.NoCache);
                     foreach (var item in AssignedObject.Parameters)
                     {
                         if (!string.IsNullOrWhiteSpace(item.Name))
                             exp.Parameters[item.Name] = item.Value;
-                    }                   
+                    }
 
                     var ev = exp.Evaluate();
-
-                    decimal final = 0;
-                    decimal.TryParse(ev.ToString() , out final);
-                    return final;
+                    if (ev != null)
+                    {
+                        decimal final = 0;
+                        decimal.TryParse(ev.ToString() , out final);
+                        return final;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
                 }
-                catch (Exception e)
+                catch /*(Exception e)*/
                 {
-                    Debug.WriteLine("Failed to evaluate");
-                    Debug.WriteLine(e.ToString());
-                    throw;
-                    //return 0;
+                    return 0;
                 }
-              
             }
         }
 
