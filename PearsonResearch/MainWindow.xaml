@@ -7,8 +7,10 @@
         xmlns:dm="clr-namespace:PearsonResearch.DataManagment"
         xmlns:local="clr-namespace:PearsonResearch"
         xmlns:helper="clr-namespace:PearsonResearch.Helpers"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        
         mc:Ignorable="d"
-        Title="MainWindow" Height="400" Width="525">
+        Title="Pearson's Correlation coefficient Calculator - By bigworld12 (Ahmed fwela)" Height="500" Width="525">
     <Grid>
         <!--how the gui will look :
         Header - the parameters that will get used in the experiment        
@@ -94,6 +96,10 @@
 
         <!--footer-->
         <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
             <StackPanel>
                 <DockPanel>
                     <TextBlock Text="Sum of Left : "></TextBlock>
@@ -120,8 +126,27 @@
                     <TextBlock Text="Pearson's R = "/>
                     <TextBox Width="Auto" HorizontalAlignment="Left" IsReadOnly="True" Text="{Binding Path=PearsonR,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue=0,FallbackValue=0}"/>
                 </DockPanel>
+                
+                    <TextBlock Text="Regression Line formula : "/>
+                    <TextBox Width="Auto" HorizontalAlignment="Left" IsReadOnly="True" Text="{Binding Path=RegressionLineFormula,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue='Left = Right',FallbackValue='Left = Right'}"/>
+                
             </StackPanel>
-            
+            <Grid Grid.Column="1">
+                <lvc:CartesianChart Margin="5" Zoom="X" MinWidth="200">
+                    <lvc:CartesianChart.Series>
+                        <lvc:ScatterSeries Title="Data" Values="{Binding Path=PointsValues,Mode=OneWay}" />
+                        <lvc:LineSeries  Values="{Binding Path=RegPointsValues}" LineSmoothness="0" PointGeometrySize="0" Stroke="Red"/>                    
+                    </lvc:CartesianChart.Series>
+                    <lvc:CartesianChart.AxisX>
+                        <lvc:Axis LabelFormatter="{Binding XFormatter}" Separator="{x:Static lvc:DefaultAxes.CleanSeparator}"/>
+                    </lvc:CartesianChart.AxisX>
+                    <lvc:CartesianChart.AxisY>
+                        <lvc:Axis LabelFormatter="{Binding YFormatter}"/>
+                    </lvc:CartesianChart.AxisY>
+                </lvc:CartesianChart>
+                
+                
+            </Grid>
         </Grid>
 
 

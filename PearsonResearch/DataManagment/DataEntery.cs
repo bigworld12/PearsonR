@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NCalc;
 using System.ComponentModel;
 using System.Diagnostics;
+using LiveCharts.Defaults;
 
 namespace PearsonResearch.DataManagment
 {
@@ -120,6 +121,24 @@ namespace PearsonResearch.DataManagment
         {
             PropertyChanged?.Invoke(this , new PropertyChangedEventArgs(propname));
         }
+
+        private ObservablePoint basepoint;
+        public ObservablePoint LeftRightPoint
+        {
+
+            get
+            {
+                if (basepoint == null)
+                    basepoint = new ObservablePoint(Right_Parameter.Value , Left_Parameter.Value);                
+                else
+                {
+                    basepoint.X = Right_Parameter.Value;
+                    basepoint.X = Left_Parameter.Value;                  
+                }
+                return basepoint;
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
     }
     public class RequestAllParametersListEventArgs

@@ -56,13 +56,13 @@ namespace PearsonResearch.DataManagment
             }
         }
 
-        public decimal Value
+        public double Value
         {
             get
             {
                 try
                 {
-                    if (AssignedObject == null || string.IsNullOrWhiteSpace(MathematicalRepresentation) || AssignedObject.Parameters.Count == 0) return 0m;
+                    if (AssignedObject == null || string.IsNullOrWhiteSpace(MathematicalRepresentation) || AssignedObject.Parameters.Count == 0) return 0d;
 
                     Expression exp = new Expression(MathematicalRepresentation , EvaluateOptions.IgnoreCase | EvaluateOptions.NoCache);
                     foreach (var item in AssignedObject.Parameters)
@@ -74,8 +74,8 @@ namespace PearsonResearch.DataManagment
                     var ev = exp.Evaluate();
                     if (ev != null)
                     {
-                        decimal final = 0;
-                        decimal.TryParse(ev.ToString() , out final);
+                        double final = 0;
+                        double.TryParse(ev.ToString() , out final);
                         return final;
                     }
                     else

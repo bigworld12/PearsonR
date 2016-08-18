@@ -32,10 +32,11 @@ namespace PearsonResearch
 
             //binding doesn't work ? it works :P
             //todo : validate against spaces in parameter name
-            ViewModel.AllParametersList.Add(new DataManagment.Parameter() { Name = "x" });
             ViewModel.AllParametersList.Add(new DataManagment.Parameter() { Name = "y" });
-            ViewModel.LeftExpression = "[x]";
-            ViewModel.RightExpression = "[y]";
+            ViewModel.AllParametersList.Add(new DataManagment.Parameter() { Name = "x" });
+            ViewModel.LeftExpression = "[y]";
+            ViewModel.RightExpression = "[x]";
+            
 
         }
 
@@ -115,6 +116,21 @@ namespace PearsonResearch
         =================
         we will also nead a data entry list
         ===========================
+
+        Left = A * Right + B
+        x = right , y = left
+
+        A = 
+        c * sum[left * right] - sum[left] * sum[right]
+        /
+        c * sum[Right ^ 2] - sum[Right] ^ 2
+
+        B = 
+        sum[left] - A * sum[right]
+        / 
+        c
+
+
 
                   */
     }

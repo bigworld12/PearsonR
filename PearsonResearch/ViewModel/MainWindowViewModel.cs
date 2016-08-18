@@ -1,4 +1,7 @@
-﻿using PearsonResearch.DataManagment;
+﻿
+using LiveCharts;
+using LiveCharts.Defaults;
+using PearsonResearch.DataManagment;
 using PearsonResearch.Helpers;
 using System;
 using System.Collections.Generic;
@@ -10,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
+using NCalc;
 
 namespace PearsonResearch.ViewModel
 {
@@ -28,6 +32,13 @@ namespace PearsonResearch.ViewModel
             DataEnteries.ItemPropertyChanged += DataEnteries_ItemPropertyChanged;
 
             InitiateColumns();
+
+            PointsValues = new ChartValues<ObservablePoint>();
+            RegPointsValues = new ChartValues<ObservablePoint>();
+
+            XFormatter = val => val.ToString("0.00");
+            YFormatter = val => val.ToString("0.00");
+
         }
 
         public void InitiateColumns()
@@ -100,10 +111,30 @@ namespace PearsonResearch.ViewModel
                 {
                     foreach (var item in e.NewItems.Cast<DataEntery>())
                     {
+                        //item.Right_Parameter.PropertyChanged += delegate (object raiser , PropertyChangedEventArgs args)
+                        //{
+                        //    if (args.PropertyName == "Value")
+                        //    {
+                        //        item.RaisePropertyChanged(nameof(item.LeftRightPoint));
+                        //    }
+
+                        //};
+                        //item.Left_Parameter.PropertyChanged += delegate (object raiser , PropertyChangedEventArgs args)
+                        //{
+                        //    if (args.PropertyName == "Value")
+                        //    {
+                        //        item.RaisePropertyChanged(nameof(item.LeftRightPoint));
+                        //    }
+                        //};
+
                         item.Right_Parameter.PropertyChanged += Right_Parameter_PropertyChanged;
                         item.Left_Parameter.PropertyChanged += Left_Parameter_PropertyChanged;
-                                               
+
+
+
                         item.ViewModel = this;
+
+                        PointsValues.Add(item.LeftRightPoint);
 
                         item.RequestParameters += Item_RequestParameters;
                         item.UpdateFromAllParameters();
@@ -113,7 +144,12 @@ namespace PearsonResearch.ViewModel
                 {
                     foreach (var item in e.OldItems.Cast<DataEntery>())
                     {
+                        item.Right_Parameter.PropertyChanged -= Right_Parameter_PropertyChanged;
+                        item.Left_Parameter.PropertyChanged -= Left_Parameter_PropertyChanged;
+
                         item.RequestParameters -= Item_RequestParameters;
+
+                        PointsValues.Remove(item.LeftRightPoint);
                     }
                 }
             }
@@ -122,25 +158,39 @@ namespace PearsonResearch.ViewModel
 
         private void Left_Parameter_PropertyChanged(object sender , PropertyChangedEventArgs e)
         {
+            PParameter leftparam = sender as PParameter;
             if (e.PropertyName == "Value")
             {
+                leftparam.AssignedObject.LeftRightPoint.Y = leftparam.Value;
+
                 RaisePropertyChanged(nameof(LeftSum));
                 RaisePropertyChanged(nameof(LeftRightSum));
                 RaisePropertyChanged(nameof(LeftSquaredSum));
 
                 RaisePropertyChanged(nameof(PearsonR));
+
+                RaisePropertyChanged(nameof(RegA));
+                RaisePropertyChanged(nameof(RegB));
+                RaisePropertyChanged(nameof(RegressionLineFormula));
             }
         }
 
         private void Right_Parameter_PropertyChanged(object sender , PropertyChangedEventArgs e)
         {
+            PParameter rightparam = sender as PParameter;
             if (e.PropertyName == "Value")
             {
+                rightparam.AssignedObject.LeftRightPoint.X = rightparam.Value;
+
                 RaisePropertyChanged(nameof(RightSum));
                 RaisePropertyChanged(nameof(LeftRightSum));
                 RaisePropertyChanged(nameof(RightSquaredSum));
 
                 RaisePropertyChanged(nameof(PearsonR));
+
+                RaisePropertyChanged(nameof(RegA));
+                RaisePropertyChanged(nameof(RegB));
+                RaisePropertyChanged(nameof(RegressionLineFormula));
             }
         }
 
@@ -240,7 +290,7 @@ namespace PearsonResearch.ViewModel
                     }
                 }
 
-                });
+            });
         }
 
         private void AllParametersList_CollectionChanged(object sender , System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -326,11 +376,11 @@ namespace PearsonResearch.ViewModel
         }
 
         #region Pearson's Values
-        public decimal LeftSum
+        public double LeftSum
         {
             get
             {
-                decimal finalsum = 0;
+                double finalsum = 0;
                 foreach (var item in DataEnteries)
                 {
                     finalsum += item.Left_Parameter.Value;
@@ -338,11 +388,11 @@ namespace PearsonResearch.ViewModel
                 return finalsum;
             }
         }
-        public decimal RightSum
+        public double RightSum
         {
             get
             {
-                decimal finalsum = 0;
+                double finalsum = 0;
                 foreach (var item in DataEnteries)
                 {
                     finalsum += item.Right_Parameter.Value;
@@ -350,11 +400,11 @@ namespace PearsonResearch.ViewModel
                 return finalsum;
             }
         }
-        public decimal LeftRightSum
+        public double LeftRightSum
         {
             get
             {
-                decimal finalsum = 0;
+                double finalsum = 0;
                 foreach (var item in DataEnteries)
                 {
                     finalsum += (item.Left_Parameter.Value * item.Right_Parameter.Value);
@@ -369,7 +419,7 @@ namespace PearsonResearch.ViewModel
                 double finalsum = 0;
                 foreach (var item in DataEnteries)
                 {
-                    finalsum += Pow(item.Left_Parameter.Value , 2);
+                    finalsum += Math.Pow(item.Left_Parameter.Value , 2);
                 }
                 return finalsum;
             }
@@ -381,7 +431,7 @@ namespace PearsonResearch.ViewModel
                 double finalsum = 0;
                 foreach (var item in DataEnteries)
                 {
-                    finalsum += Pow(item.Right_Parameter.Value , 2);
+                    finalsum += Math.Pow(item.Right_Parameter.Value , 2);
                 }
                 return finalsum;
             }
@@ -397,13 +447,11 @@ namespace PearsonResearch.ViewModel
           sqrt(c*sum[ x^2 ] - sum[x] ^ 2) * sqrt(c * sum[ y^2 ] - sum[y] ^ 2 )
                   */
                 int c = DataEnteries.Count;
-                double TOP = 1;
-                double.TryParse(((c * LeftRightSum) - (LeftSum * RightSum)).ToString() , out TOP);
-
+                double TOP = (c * LeftRightSum) - (LeftSum * RightSum);
                 double BOTTOM =
-                    Math.Sqrt((c * LeftSquaredSum) - (Pow(LeftSum , 2)))
+                    Math.Sqrt((c * LeftSquaredSum) - (Math.Pow(LeftSum , 2)))
                     *
-                    Math.Sqrt((c * RightSquaredSum) - (Pow(RightSum , 2)));
+                    Math.Sqrt((c * RightSquaredSum) - (Math.Pow(RightSum , 2)));
 
 
                 return TOP / BOTTOM;
@@ -412,19 +460,8 @@ namespace PearsonResearch.ViewModel
         #endregion
 
 
-
-
-        public double Pow(decimal first , decimal second)
-        {
-            double dfirst = 1d;
-            double dsec = 1d;
-
-            double.TryParse(first.ToString() , out dfirst);
-            double.TryParse(second.ToString() , out dsec);
-
-            return Math.Pow(dfirst , dsec);
-
-        }
+        public Func<double , string> XFormatter { get; set; }
+        public Func<double , string> YFormatter { get; set; }
 
 
         private string m_LeftExpression;
@@ -435,7 +472,7 @@ namespace PearsonResearch.ViewModel
             {
                 m_LeftExpression = value;
                 RaisePropertyChanged(nameof(LeftExpression));
-               
+
             }
         }
 
@@ -449,11 +486,90 @@ namespace PearsonResearch.ViewModel
             {
                 m_RightExpression = value;
                 RaisePropertyChanged(nameof(RightExpression));
-              
+
             }
         }
 
 
+        private double RegA
+        {
+            get
+            {
+                int c = DataEnteries.Count;
+                /*
+                   A = 
+        c * sum[left * right] - sum[left] * sum[right]
+        /
+        c * sum[Right ^ 2] - sum[Right] ^ 2
+                 */
+
+                double TOP = c * LeftRightSum - LeftSum * RightSum;
+                double BOTTOM = c * RightSquaredSum - Math.Pow(RightSum , 2);
+
+                return TOP / BOTTOM;
+            }
+        }
+
+        private double RegB
+        {
+            get
+            {
+                int c = DataEnteries.Count;
+                /*
+                 
+                   B = 
+        sum[left] - A * sum[right]
+        / 
+        c
+                 */
+                return RegBFromA(RegA);
+            }
+        }
+        private double RegBFromA(double A)
+        {
+            int c = DataEnteries.Count;
+            /*
+
+               B = 
+    sum[left] - A * sum[right]
+    / 
+    c
+             */
+            return (LeftSum - A * RightSum) / c;
+        }
+
+
+        public string RegressionLineFormula
+        {
+            get
+            {
+                var A = RegA;
+                var B = RegBFromA(A);
+                var finalsign = B > 0 ? "+" : "-";
+                //[Left] = A * [Right] +- B
+                var liney1 = B;
+
+                if (RegPointsValues == null)
+                {
+                    RegPointsValues = new ChartValues<ObservablePoint>();
+                }
+                RegPointsValues.Clear();
+                if (DataEnteries.Count > 1)
+                {                    
+                    RegPointsValues.Add(new ObservablePoint(0 , B));
+                    var biggestpointX = PointsValues.OrderByDescending(x => x.X).First().X;
+                    RegPointsValues.Add(new ObservablePoint(biggestpointX , A * biggestpointX + B));              
+
+                }
+                return $"Left = {A.ToString("0.0000")} * Right {finalsign} {Math.Abs(B).ToString("0.0000")}";
+            }
+        }
+
+        public ChartValues<ObservablePoint> PointsValues { get; set; }
+
+        public ChartValues<ObservablePoint> RegPointsValues { get; set; }
+
         //now we work on the maths part
     }
+
 }
