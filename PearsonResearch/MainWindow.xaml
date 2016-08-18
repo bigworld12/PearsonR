@@ -1,0 +1,130 @@
+﻿<Window x:Class="PearsonResearch.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PearsonResearch.ViewModel"
+        xmlns:dm="clr-namespace:PearsonResearch.DataManagment"
+        xmlns:local="clr-namespace:PearsonResearch"
+        xmlns:helper="clr-namespace:PearsonResearch.Helpers"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="400" Width="525">
+    <Grid>
+        <!--how the gui will look :
+        Header - the parameters that will get used in the experiment        
+        Body - the DataEntries
+        Footer - the result of the experiment (the R value)
+        -->
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <!--header-->
+            <RowDefinition Height="*"/>
+            <!--body-->
+            <RowDefinition Height="*"/>
+            <!--footer-->
+        </Grid.RowDefinitions>
+        <!--header-->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock Text="Left Parameter Expression : "/>
+                        <TextBox HorizontalAlignment="Right" MinWidth="100" Text="{Binding Path=LeftExpression,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBlock Text="Right Parameter Expression : "/>
+                        <TextBox HorizontalAlignment="Right" MinWidth="100" Text="{Binding Path=RightExpression,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    </DockPanel>
+                    <Button Content="Update" Click="UpdateExpressionsButton_Click"/>
+                </StackPanel>
+               
+            </Grid>
+            
+            <DataGrid Grid.Column="1"
+                ItemsSource="{Binding Path=AllParametersList,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                      CanUserDeleteRows="True" 
+                      CanUserReorderColumns="False" 
+                      CanUserResizeColumns="True" 
+                      CanUserSortColumns="True"
+                      AutoGenerateColumns="False"
+                
+                      
+                      ScrollViewer.CanContentScroll="True"                      
+                      ScrollViewer.VerticalScrollBarVisibility="Visible"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Stretch" 
+                      
+                      Grid.Row="1" 
+                >
+                <!--items are from AllParametersList property-->
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding Path=Name,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Header="Parameter"/>
+                    <DataGridTextColumn Binding="{Binding Path=Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Header="Description"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <!--body-->
+        <Grid Grid.Row="1">
+            <DataGrid helper:DataGridColumnsBehavior.BindableColumns="{Binding Path=DataEntryColumns}"                       
+                      Grid.Row="2" 
+                      
+                      ItemsSource="{Binding Path=DataEnteries,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                      
+                      CanUserAddRows="True"
+                      CanUserDeleteRows="True" 
+                      
+                      CanUserReorderColumns="False" 
+                      CanUserResizeColumns="True" 
+                      CanUserSortColumns="True"
+                      AutoGenerateColumns="False"
+                      
+                      ScrollViewer.CanContentScroll="True"                      
+                      ScrollViewer.VerticalScrollBarVisibility="Visible"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      />
+        </Grid>
+
+        <!--footer-->
+        <Grid Grid.Row="2">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="Sum of Left : "></TextBlock>
+                    <TextBlock Text="{Binding Path=LeftSum,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue=0,FallbackValue=0}"/>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="Sum of Right : "></TextBlock>
+                    <TextBlock Text="{Binding Path=RightSum,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue=0,FallbackValue=0}"/>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="Sum of Left * Right : "></TextBlock>
+                    <TextBlock Text="{Binding Path=LeftRightSum,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue=0,FallbackValue=0}"/>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="Sum of Left Squared: "></TextBlock>
+                    <TextBlock Text="{Binding Path=LeftSquaredSum,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue=0,FallbackValue=0}"/>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="Sum of Right Squared : "></TextBlock>
+                    <TextBlock Text="{Binding Path=RightSquaredSum,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue=0,FallbackValue=0}"/>
+                </DockPanel>
+                <TextBlock Text="========================="/>
+                <DockPanel>
+                    <TextBlock Text="Pearson's R = "/>
+                    <TextBox Width="Auto" HorizontalAlignment="Left" IsReadOnly="True" Text="{Binding Path=PearsonR,UpdateSourceTrigger=PropertyChanged,Mode=OneWay,TargetNullValue=0,FallbackValue=0}"/>
+                </DockPanel>
+            </StackPanel>
+            
+        </Grid>
+
+
+
+    </Grid>
+</Window>
