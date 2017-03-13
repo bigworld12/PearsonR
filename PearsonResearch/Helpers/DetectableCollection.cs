@@ -45,8 +45,7 @@ namespace PearsonResearch.Helpers
                     foreach (var item in e.NewItems.Cast<T>())
                     {
                         foreach (var h in Handlers)
-                        {
-                            Debug.WriteLine($"Added handler to item of type : {item.GetType().Name} ,  Current Handlers count = {Handlers.Count()}");
+                        {                            
                             item.PropertyChanged += h;
                         }
 
@@ -66,9 +65,6 @@ namespace PearsonResearch.Helpers
                     }
                 }
             }
-
-            
-          
         }
     }
 }

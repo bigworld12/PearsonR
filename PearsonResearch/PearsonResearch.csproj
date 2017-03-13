@@ -54,7 +54,8 @@
     <ManifestCertificateThumbprint>20415BB20D5BC53AA35EA9E46FCEEB604D88EEC2</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>PearsonResearch_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
